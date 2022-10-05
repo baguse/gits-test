@@ -10,7 +10,9 @@ export default class PublishersController {
     const perPage = request.input('per_page', 0)
     const search = request.input('search', '')
 
-    const query = Publisher.query()
+    const query = Publisher.query().preload('books', (bookQuery) => {
+      bookQuery.select(['id', 'title', 'description', 'total_page', 'genre'])
+    })
 
     if (search) {
       query.andWhereLike('name', `%${search}%`)
@@ -70,7 +72,12 @@ export default class PublishersController {
 
     const id = request.param('id')
 
-    const data = await Publisher.query().where('id', id).first()
+    const data = await Publisher.query()
+      .preload('books', (bookQuery) => {
+        bookQuery.select(['id', 'title', 'description', 'total_page', 'genre'])
+      })
+      .where('id', id)
+      .first()
 
     if (!data)
       return response.notFound({
